@@ -14,43 +14,341 @@ datasource db {
 }
 
 enum Role {
-  USER
+  CUSTOMER
   ADMIN
+  SUPER_ADMIN
 }
 
+enum InventoryAction {
+  RESTOCK
+  SALE
+  ADD
+}
+
+enum PromotionType {
+  FIXED
+  PERCENTAGE
+}
+
+enum OrderStatus {
+  WAITING_PAYMENT
+  WAITING_CONFIRMATION
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  MANUAL
+  PAYMENT_GATEWAY
+}
+
+enum VoucherType {
+  PRODUCT_SPECIFIC
+  TOTAL_PURCHASE
+  SHIPPING
+  REFERRAL
+}
+
+enum Provider {
+  GOOGLE
+  CREDENTIALS
+}
+
+enum TokenType {
+  EMAIL_VERIFICATION
+  RESET_PASSWORD
+}
+
+/**
+ * ------------------------------- User Model -------------------------------
+ */
 model User {
-  id           String   @id @default(uuid())
-  name         String
-  email        String
-  password     String
-  profileImage String
-  role         Role     @default(USER)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id           String    @id @default(uuid())
+  name         String?
+  email        String    @unique
+  password     String?
+  profileImage String?
+  referralCode String    @unique
+  provider     Provider
+  role         Role      @default(CUSTOMER)
+  isVerified   Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
 
-  @@unique([email])
+  Address          Address[]
+  Cart             Cart?
+  InventoryJournal InventoryJournal[]
+  DiscountUsage    DiscountUsage[]
+  Order            Order[]
+  Store            Store[]
+  Token            Token[]
 }
 
+model Address {
+  id         String   @id @default(uuid())
+  userId     String
+  street     String
+  city       String
+  province   String
+  postalCode String
+  latitude   Float
+  longitude  Float
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  User  User    @relation(fields: [userId], references: [id])
+  Order Order[]
+}
+
+/**
+ * ------------------------------- Store Model ------------------------------
+ */
 model Store {
-  id String @id @default(uuid())
+  id          String    @id @default(uuid())
+  name        String    @unique
+  adminId     String
+  address     String
+  city        String
+  province    String
+  postalCode  String
+  maxDistance Float
+  latitude    Float
+  longitude   Float
+  isDefault   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  User             User               @relation(fields: [adminId], references: [id])
+  InventoryJournal InventoryJournal[]
+  Discount         Discount[]
+  Order            Order[]
 }
 
+/**
+ * ------------------------------ Product Model -----------------------------
+ */
 model Product {
-  id String @id @default(uuid())
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String
+  price       Float
+  weight      Float
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  ProductCategory  ProductCategory[]
+  ProductImage     ProductImage[]
+  CartItem         CartItem[]
+  InventoryJournal InventoryJournal[]
+  Discount         Discount[]
+  OrderItem        OrderItem[]
 }
 
-model Transaction {
-  id String @id @default(uuid())
+model ProductImage {
+  id        String    @id @default(uuid())
+  productId String
+  imageId   String
+  deletedAt DateTime?
+
+  Product Product @relation(fields: [productId], references: [id])
+  Image   Image   @relation(fields: [imageId], references: [id])
 }
 
-model Promotion {
-  id String @id @default(uuid())
+model ProductCategory {
+  id         String    @id @default(uuid())
+  productId  String
+  categoryId String
+  deletedAt  DateTime?
+
+  Product  Product  @relation(fields: [productId], references: [id])
+  Category Category @relation(fields: [categoryId], references: [id])
+}
+
+model ProductInventory {
+  id        String    @id @default(uuid())
+  productId String
+  storeId   String
+  stock     Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@unique([productId, storeId])
+}
+
+model InventoryJournal {
+  id        String          @id @default(uuid())
+  storeId   String
+  productId String
+  quantity  String
+  weight    Float
+  action    InventoryAction
+  userId    String
+  createdAt DateTime        @default(now())
+
+  Store   Store   @relation(fields: [storeId], references: [id])
+  Product Product @relation(fields: [productId], references: [id])
+  User    User    @relation(fields: [userId], references: [id])
+}
+
+/**
+ * ----------------------------- Category Model -----------------------------
+ */
+model Category {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  ProductCategory ProductCategory[]
+}
+
+/**
+ * ------------------------------- Image Model ------------------------------
+ */
+model Image {
+  id        String    @id @default(uuid())
+  imageUrl  String
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+
+  ProductImage ProductImage[]
+}
+
+/**
+ * ------------------------------- Cart Model -------------------------------
+ */
+model Cart {
+  id         String   @id @default(uuid())
+  userId     String   @unique
+  totalPrice Float
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  User     User       @relation(fields: [userId], references: [id])
+  CartItem CartItem[]
+}
+
+model CartItem {
+  id        String    @id @default(uuid())
+  cartId    String
+  productId String
+  quantity  Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  Cart    Cart    @relation(fields: [cartId], references: [id])
+  Product Product @relation(fields: [productId], references: [id])
+}
+
+/**
+ * ----------------------------- Promotion Model ----------------------------
+ */
+model Discount {
+  id            String        @id @default(uuid())
+  storeId       String
+  productId     String
+  promotionType PromotionType
+  value         Decimal
+  minPurchase   Decimal
+  maxDiscount   Decimal
+  buyOneGetOne  Boolean       @default(false)
+  startDate     DateTime
+  endDate       DateTime
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  deletedAt     DateTime?
+
+  Store         Store           @relation(fields: [storeId], references: [id])
+  Product       Product         @relation(fields: [productId], references: [id])
+  DiscountUsage DiscountUsage[]
+}
+
+model DiscountUsage {
+  id          String   @id @default(uuid())
+  userId      String
+  discountId  String
+  totalAmount Decimal
+  createdAt   DateTime @default(now())
+
+  User     User     @relation(fields: [userId], references: [id])
+  Discount Discount @relation(fields: [discountId], references: [id])
 }
 
 model Voucher {
-  id String @id @default(uuid())
+  id            String        @id @default(uuid())
+  code          String
+  type          VoucherType
+  promotionType PromotionType
+  quota         Int
+  maxDiscount   Decimal
+  startDate     DateTime
+  endDate       DateTime
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  deletedAt     DateTime?
 }
 
-model Cart {
-  id String @id @default(uuid())
+/**
+ * ------------------------------- Order Model ------------------------------
+ */
+model Order {
+  id             String        @id @default(uuid())
+  storeId        String
+  userId         String
+  totalAmount    Decimal
+  addressId      String
+  paymentMethod  PaymentMethod
+  paymentProofId String
+  paymentDueDate DateTime
+  status         OrderStatus   @default(WAITING_PAYMENT)
+  createdAt      DateTime      @default(now())
+
+  Store        Store        @relation(fields: [storeId], references: [id])
+  User         User         @relation(fields: [userId], references: [id])
+  Address      Address      @relation(fields: [addressId], references: [id])
+  PaymentProof PaymentProof @relation(fields: [paymentProofId], references: [id])
+  OrderItem    OrderItem[]
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  productId String
+  orderId   String
+  quantity  Int
+  unitPrice Decimal
+
+  Product Product @relation(fields: [productId], references: [id])
+  Order   Order   @relation(fields: [orderId], references: [id])
+}
+
+model PaymentProof {
+  id        String   @id @default(uuid())
+  imageUrl  String
+  createdAt DateTime @default(now())
+
+  Order Order[]
+}
+
+/**
+ * ------------------------------- Token Model ------------------------------
+ */
+model Token {
+  id        String    @id @default(uuid())
+  token     String
+  userId    String
+  type      TokenType
+  isUsed    Boolean   @default(false)
+  expiredAt DateTime
+
+  User User @relation(fields: [userId], references: [id])
 }

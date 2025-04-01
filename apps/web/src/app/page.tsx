@@ -17,10 +17,10 @@ export default function HomePage() {
         setLocation({
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
-        })
+        }),
       );
     }
   }, []);
 
-  return <main className="font-poppins">HomePage</main>;
+  return <main className="max-wrapper">Home Page</main>;
 }

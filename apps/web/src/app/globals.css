@@ -2,5 +2,17 @@
 @import "tailwindcss";
 
 @theme {
-  --font-poppins: "Poppins", "sans-serif";
+  --font-poppins: Poppins, "sans-serif";
+}
+
+@layer base {
+  body {
+    @apply font-poppins flex min-h-screen flex-col;
+  }
+}
+
+@layer utilities {
+  .max-wrapper {
+    @apply mx-auto w-full max-w-[1200px] p-4;
+  }
 }
