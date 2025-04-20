@@ -57,6 +57,7 @@ enum Provider {
 }
 
 enum TokenType {
+  COMPLETE_REGISTRATION
   EMAIL_VERIFICATION
   RESET_PASSWORD
 }

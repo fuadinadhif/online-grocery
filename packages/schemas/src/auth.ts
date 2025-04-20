@@ -26,5 +26,24 @@ export const CompleteRegistrationSchema = z.object({
     .regex(/[a-z]/, "Password must contain at leas one lowercase letter")
     .regex(/\d/, "Password must contain at least one number")
     .regex(/\W/, "Password must containe at least one special character"),
-  confirmPassword: z.string(),
+  confirmPassword: z.string().min(1, "Please input your confirm password"),
+});
+
+export const ForgetPasswordSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, "Please input your email")
+    .email({ message: "Invalid email addres" }),
+});
+
+export const ResetPasswordSchema = z.object({
+  newPassword: z
+    .string()
+    .min(8, "Password must be at least 8 characters long")
+    .regex(/[A-Z]/, "Password must containt at least one uppercase letter")
+    .regex(/[a-z]/, "Password must contain at leas one lowercase letter")
+    .regex(/\d/, "Password must contain at least one number")
+    .regex(/\W/, "Password must containe at least one special character"),
+  confirmPassword: z.string().min(1, "Please input your confirm password"),
 });

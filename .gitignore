@@ -4,3 +4,6 @@ node_modules
 # cache
 .turbo
 .qodo
+
+# notes
+TODO.md

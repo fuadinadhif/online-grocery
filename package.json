@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "type": "module",
   "workspaces": [
-    "apps/*"
+    "apps/*",
+    "packages/*"
   ],
   "packageManager": "npm@11.1.0",
   "scripts": {

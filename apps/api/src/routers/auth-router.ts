@@ -1,16 +1,20 @@
 import express from "express";
 import {
   completeRegistration,
-  login,
+  signIn,
   register,
+  sendVerificationEmail,
   validateToken,
+  resetPassword,
 } from "../controllers/auth-controller.js";
 
 const router = express.Router();
 
-router.route("/login").post(login);
+router.route("/sign-in").post(signIn);
 router.route("/register").post(register);
-router.route("/validate-token").put(validateToken);
-router.route("/complete-registration").put(completeRegistration);
+router.route("/register/complete").put(completeRegistration);
+router.route("/email/verification").post(sendVerificationEmail);
+router.route("/token/validate").get(validateToken);
+router.route("/password/reset").post(resetPassword);
 
 export default router;

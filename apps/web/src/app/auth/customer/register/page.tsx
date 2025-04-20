@@ -3,10 +3,11 @@
 import { ZodError } from "zod";
 
 import { notify } from "@/utils/toastify";
-import { RegisterSchema } from "@/schemas/auth";
-import SignInForm from "@/components/google-sign-in-form";
+import { RegisterSchema } from "schemas";
+import GoogleSignInForm from "@/components/google-sign-in-form";
 import { useForm } from "@/hooks/use-form";
 import GeneralInput from "@/components/general-input";
+import { fetchJsonApi } from "@/utils/fetch-json-api";
 
 export default function RegisterPage() {
   const {
@@ -35,31 +36,28 @@ export default function RegisterPage() {
 
       const parsedFormData = RegisterSchema.parse(formData);
 
-      const registerResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_API_DOMAIN}/auth/register`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...parsedFormData,
-            provider: "CREDENTIALS",
-          }),
+      const registerData = await fetchJsonApi({
+        url: `${process.env.NEXT_PUBLIC_API_DOMAIN}/auth/register`,
+        method: "POST",
+        body: { ...parsedFormData, provider: "CREDENTIALS" },
+        errorMessage: "Failed to register",
+      });
+
+      await fetchJsonApi({
+        url: `${process.env.NEXT_PUBLIC_API_DOMAIN}/auth/email/verification`,
+        method: "POST",
+        body: {
+          type: "COMPLETE_REGISTRATION",
+          email: parsedFormData.email,
+          clientURL: "/auth/customer/register/complete",
+          expiredInMS: 1000 * 60 * 60,
         },
-      );
-      const registerData = await registerResponse.json();
+        errorMessage: "Failed to send verification email",
+      });
 
-      if (!registerResponse.ok) {
-        setErrors((prev) => ({
-          ...prev,
-          form: registerData.message || ["Failed to register"],
-        }));
-      } else {
-        notify(registerData.message);
-        setFormData({ email: "" });
-        setErrors({});
-      }
-
-      setIsLoading(false);
+      notify(registerData.message);
+      setFormData({ email: "" });
+      setErrors({});
     } catch (error) {
       if (error instanceof ZodError) {
         const errors = error.flatten().fieldErrors;
@@ -69,7 +67,7 @@ export default function RegisterPage() {
           form: [error.message || "An unexpected error occurred"],
         });
       }
-
+    } finally {
       setIsLoading(false);
     }
   }
@@ -108,7 +106,7 @@ export default function RegisterPage() {
         <div className="h-0 w-full border-b-[0.025rem] border-gray-700"></div>
       </div>
 
-      <SignInForm className="w-full max-w-96 border border-gray-700 text-center" />
+      <GoogleSignInForm className="w-full max-w-96 border border-gray-700 text-center" />
     </main>
   );
 }

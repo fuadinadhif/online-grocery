@@ -20,7 +20,10 @@ export function useForm<T extends Record<string, unknown>>(
       });
 
       if (field === "confirmPassword") {
-        if (formData.password !== value) {
+        if (
+          (formData.password && formData.password !== value) ||
+          (formData.newPassword && formData.newPassword !== value)
+        ) {
           setErrors((prev) => ({
             ...prev,
             confirmPassword: ["Passwords do not match"],

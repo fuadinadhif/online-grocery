@@ -6,7 +6,6 @@ import { CustomJwtPayload } from "../types/express.js";
 
 export function verifyToken(req: Request, _res: Response, next: NextFunction) {
   try {
-    console.log("Here");
     const accessToken = req.cookies.accessToken;
 
     if (!accessToken) {

@@ -9,9 +9,18 @@ export async function getShippingOptions(
   next: NextFunction
 ) {
   try {
+    const { origin, destination, weight } = req.query as unknown as {
+      origin: string;
+      destination: string;
+      weight: string;
+    };
+
+    if (!origin || !destination || !weight) {
+      throw new AppError("Missing required parameters", 400);
+    }
+
     const courier =
       "jne:sicepat:ide:sap:jnt:ninja:tiki:lion:anteraja:pos:ncs:rex:rpx:sentral:star:wahana:dse";
-    const { origin, destination, weight } = req.body;
 
     const response = await fetch(
       "https://rajaongkir.komerce.id/api/v1/calculate/domestic-cost",

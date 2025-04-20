@@ -2,64 +2,60 @@ import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import jwt from "jsonwebtoken";
 import { JWT } from "next-auth/jwt";
+import { fetchJsonApi } from "./utils/fetch-json-api";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  providers: [
-    Google({
-      // Google requires "offline" access_type to provide a `refresh_token`
-      authorization: { params: { access_type: "offline", prompt: "consent" } },
-    }),
-  ],
+  providers: [Google],
   callbacks: {
     async signIn({ user }) {
       try {
-        const lookupResponse = await fetch(
-          `${process.env.API_DOMAIN}/users/lookup`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email: user.email }),
-          },
-        );
-        const lookupData = await lookupResponse.json();
+        try {
+          const data = await fetchJsonApi({
+            url: `${process.env.API_DOMAIN}/users/lookup?email=${user.email}`,
+            errorMessage: "Failed to lookup user",
+          });
 
-        if (!lookupData || !lookupData.data) {
-          const registerResponse = await fetch(
-            `${process.env.API_DOMAIN}/auth/register`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                email: user.email,
-                name: user.name,
-                profileImage: user.image,
-                provider: "GOOGLE",
-                isVerified: true,
-              }),
-            },
-          );
-
-          if (!registerResponse.ok) {
-            console.error("Failed to register user");
-            return false;
+          if (data.data.provider !== "GOOGLE") {
+            const message =
+              "Your email registered using credentials. Please continue using credentials instead";
+            return `/error?error=AccessDenied&message=${encodeURIComponent(message)}`;
           }
-        }
 
-        return true;
+          return true;
+        } catch (error) {
+          console.error(error);
+          await fetchJsonApi({
+            url: `${process.env.API_DOMAIN}/auth/register`,
+            method: "POST",
+            body: {
+              email: user.email,
+              name: user.name,
+              profileImage: user.image,
+              provider: "GOOGLE",
+              isVerified: true,
+            },
+            errorMessage: "Failed to register",
+          });
+
+          return true;
+        }
       } catch (error) {
-        console.error("Error during sign-in process:", error);
+        console.error(error);
         return false;
       }
     },
     async jwt({ token, user, account }) {
       if (user && account) {
-        const response = await fetch(`${process.env.API_DOMAIN}/users/lookup`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: user.email }),
-        });
-        const userData = await response.json();
-        token.role = userData.data.role;
+        try {
+          const lookupData = await fetchJsonApi({
+            url: `${process.env.API_DOMAIN}/users/lookup?email=${user.email}`,
+            errorMessage: "Failed to lookup user",
+          });
+
+          token.role = lookupData.data.role;
+        } catch (error) {
+          console.error(error);
+        }
       }
 
       return token;
@@ -109,5 +105,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             : "localhost",
       },
     },
+  },
+  pages: {
+    error: "/error",
   },
 });

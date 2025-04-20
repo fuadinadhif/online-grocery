@@ -1,9 +1,9 @@
 import express from "express";
 
-import { lookup } from "../controllers/user-controller.js";
+import { lookupUser } from "../controllers/user-controller.js";
 
 const router = express.Router();
 
-router.route("/lookup").post(lookup);
+router.route("/lookup").get(lookupUser);
 
 export default router;

@@ -1,10 +1,12 @@
-import { auth } from "@/auth";
+"use client";
+
 import Link from "next/link";
 
 import SignOutForm from "./sign-out-form";
+import { useSession } from "next-auth/react";
 
-export default async function Header() {
-  const session = await auth();
+export default function Header() {
+  const { data: session } = useSession();
 
   return (
     <header className="max-wrapper flex h-24 items-center justify-between">
