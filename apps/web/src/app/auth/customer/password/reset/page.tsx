@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
@@ -10,7 +10,7 @@ import { useForm } from "@/hooks/use-form";
 import { fetchJsonApi } from "@/utils/fetch-json-api";
 import PasswordInput from "@/components/password-input";
 
-export default function ResetPage() {
+function ResetContent() {
   const {
     formData,
     errors,
@@ -148,5 +148,13 @@ export default function ResetPage() {
         </button>
       </form>
     </main>
+  );
+}
+
+export default function ResetPage() {
+  return (
+    <Suspense>
+      <ResetContent />
+    </Suspense>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
 enum Error {
   Configuration = "Configuration",
@@ -20,7 +21,7 @@ const errorMap = {
     "An unknown error occurred. Please try again later. If the issue persists, contact support.",
 };
 
-export default function AuthErrorPage() {
+function AuthErrorContent() {
   const search = useSearchParams();
   const error = search.get("error") as Error;
   const message = search.get("message");
@@ -32,5 +33,13 @@ export default function AuthErrorPage() {
         {errorMap[error] || errorMap[Error.Default]}
       </p>
     </main>
+  );
+}
+
+export default function AuthErrorPage() {
+  return (
+    <Suspense>
+      <AuthErrorContent />
+    </Suspense>
   );
 }

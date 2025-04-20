@@ -3,7 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { ZodError } from "zod";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 
 import { notify } from "@/utils/toastify";
@@ -13,7 +13,7 @@ import PasswordInput from "@/components/password-input";
 import GeneralInput from "@/components/general-input";
 import { fetchJsonApi } from "@/utils/fetch-json-api";
 
-export default function CompletePage() {
+function CompleteContent() {
   const {
     formData,
     errors,
@@ -162,5 +162,13 @@ export default function CompletePage() {
         </button>
       </form>
     </main>
+  );
+}
+
+export default function CompletePage() {
+  return (
+    <Suspense>
+      <CompleteContent />
+    </Suspense>
   );
 }
