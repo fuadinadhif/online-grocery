@@ -181,10 +181,10 @@ export async function signIn(req: Request, res: Response, next: NextFunction) {
         sameSite: "none",
         path: "/",
         secure: process.env.NODE_ENV === "production",
-        domain:
-          process.env.NODE_ENV === "production"
-            ? "online-grocery-web.vercel.app"
-            : "localhost",
+        // domain:
+        //   process.env.NODE_ENV === "production"
+        //     ? "online-grocery-api.vercel.app"
+        //     : "localhost",
       })
       .status(200)
       .json({
