@@ -21,12 +21,12 @@ export declare const CompleteRegistrationSchema: z.ZodObject<{
     password: z.ZodString;
     confirmPassword: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    name: string;
     password: string;
+    name: string;
     confirmPassword: string;
 }, {
-    name: string;
     password: string;
+    name: string;
     confirmPassword: string;
 }>;
 export declare const ForgetPasswordSchema: z.ZodObject<{
