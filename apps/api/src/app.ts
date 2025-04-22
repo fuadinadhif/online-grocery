@@ -21,9 +21,10 @@ const PORT = process.env.PORT || 8000;
 app.use(express.json());
 app.use(
   cors({
-    origin: process.env.production
-      ? "https://online-grocery-web.vercel.app"
-      : "http://localhost:3000",
+    origin:
+      process.env.NODE_ENV === "production"
+        ? "https://online-grocery-web.vercel.app"
+        : "http://localhost:3000",
     credentials: true,
   })
 );
