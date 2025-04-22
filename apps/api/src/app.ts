@@ -13,6 +13,7 @@ import cartRouter from "./routers/cart-router.js";
 
 import { notFoundMiddleware } from "./middlewares/not-found-middleware.js";
 import { errorMiddleware } from "./middlewares/error-middleware.js";
+import { verifyToken } from "./middlewares/auth-middleware.js";
 
 const app: Application = express();
 const PORT = process.env.PORT || 8000;
@@ -21,7 +22,7 @@ app.use(express.json());
 app.use(
   cors({
     origin: process.env.production
-      ? "https://onlinegrocery.com"
+      ? "https://online-grocery-web.vercel.app"
       : "http://localhost:3000",
     credentials: true,
   })
@@ -30,6 +31,25 @@ app.use(cookieParser());
 
 app.get("/api/v1/status", (_req: Request, res: Response) => {
   res.status(200).json({ message: "API is running" });
+});
+
+app.get("/api/v1/cookies", verifyToken, (req: Request, res: Response) => {
+  const cookies = req.user;
+  res.status(200).json({ cookies });
+});
+
+app.get("/api/v1/me", verifyToken, (req: Request, res: Response) => {
+  const id = req.user?.id;
+  const name = req.user?.name;
+  const email = req.user?.email;
+
+  res.status(200).json({
+    data: {
+      id,
+      name,
+      email,
+    },
+  });
 });
 
 app.use("/api/v1/auth", authRouter);

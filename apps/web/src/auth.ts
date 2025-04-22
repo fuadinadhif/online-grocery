@@ -101,7 +101,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         secure: process.env.NODE_ENV === "production",
         domain:
           process.env.NODE_ENV === "production"
-            ? "online-grocery.com"
+            ? "online-grocery-web.vercel.app"
             : "localhost",
       },
     },
